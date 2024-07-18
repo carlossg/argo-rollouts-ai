@@ -1,4 +1,3 @@
-from math import log
 import time
 import os
 import requests
@@ -24,9 +23,11 @@ if not url:
     sys.exit(1)
 
 # initial sleep
-sleep=1
+sleep = 1
 print(f"Sleeping for {sleep} seconds")
 time.sleep(sleep)
+
+return_code = 0
 
 # Open the log file
 with open(log_file_name, "a") as log_file:
@@ -35,10 +36,14 @@ with open(log_file_name, "a") as log_file:
             # Make the request with a timeout of 1 second
             print(f"Making request {i + 1} to {url}")
             response = requests.get(url, timeout=1)
+            if response.status_code != 200:
+                return_code = 1
             # Write the response text to the log file
-            print(response.text)
-            log_file.write(response.text + "\n")
+            print(f"Response: {response.status_code} {response.text}")
+            log_file.write(f"{response.status_code} {response.text}\n")
         except requests.RequestException as e:
+            return_code = 1
+            print(f"Error: {e}")
             # If an error occurs, write the error to the log file
             log_file.write(str(e) + "\n")
         # Wait for 1 second before making the next request
@@ -65,7 +70,7 @@ parser = StrOutputParser()
 # analyze each log file
 
 total_cost = 0
-print(f"Analyzing log file: {log_file_name}")
+print(f"\n\nAnalyzing log file: {log_file_name}\n")
 with open(log_file_name, "r") as f:
     lines = f.readlines()
     with get_openai_callback() as cb:
@@ -78,3 +83,6 @@ with open(log_file_name, "r") as f:
 print(
     f"Total Cost (USD): ${format(total_cost, '.6f')}"
 )  # without specifying the model version, flat-rate 0.002 USD per 1k input and output tokens is used
+
+print(f"Returning code: {return_code}")
+sys.exit(return_code)
