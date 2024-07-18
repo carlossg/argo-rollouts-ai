@@ -10,13 +10,13 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-export AZURE_OPENAI_API_KEY=...
+export GOOGLE_API_KEY=...
 ```
 
 ## Adding dependencies
 
 ```
-pip install langchain-openai
+pip install langchain-google-genai
 python3 -m pip freeze > requirements.txt
 ```
 
@@ -27,14 +27,20 @@ python3 -m pip freeze > requirements.txt
 # Running
 
 ```
-python app.py
+python app.py https://example.com
 ```
 
 # Running in Docker
 
 ```
-docker build -t csanchez/argo-rollouts-ai .
+make build
 docker run -ti --rm \
-    -e AZURE_OPENAI_API_KEY \
+    -e GOOGLE_API_KEY \
     csanchez/argo-rollouts-ai
+```
+
+# Building docker images
+
+```shell
+make build
 ```
