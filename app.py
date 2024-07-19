@@ -60,7 +60,12 @@ model = ChatGoogleGenerativeAI(
     # other params...
 )
 
-system_template = "Analyze what was this canary behavior based on this curl output:"
+system_template = (
+    "Analyze what was this canary behavior based on this curl output."
+    + "After your analysis, in the last line write a json formatted line with two entries, "
+    + "one named 'promote' with 'true' or 'false' depending on whether canary promotion should continue,"
+    + "and another named 'confidence' with a number from 0 to 100 representing your confidence in the decision."
+)
 
 prompt_template = ChatPromptTemplate.from_messages(
     [("system", system_template), ("user", "{text}")]
