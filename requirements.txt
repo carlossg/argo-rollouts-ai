@@ -25,7 +25,7 @@ langchain-community==0.2.7
 langchain-core==0.2.21
 langchain-google-genai==1.0.7
 langchain-text-splitters==0.2.2
-langsmith==0.1.90
+langsmith==0.1.96
 marshmallow==3.21.3
 multidict==6.0.5
 mypy-extensions==1.0.0
