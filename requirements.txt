@@ -29,7 +29,7 @@ langsmith==0.1.90
 marshmallow==3.21.3
 multidict==6.0.5
 mypy-extensions==1.0.0
-numpy==1.26.4
+numpy==2.0.1
 orjson==3.10.6
 packaging==24.1
 proto-plus==1.24.0
