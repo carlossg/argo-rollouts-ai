@@ -1,4 +1,4 @@
-import time
+import json
 import os
 import requests
 import sys
@@ -19,19 +19,6 @@ load_dotenv()
 log_dir = "/logs" if os.path.exists("/logs") else "./logs"
 log_stable_file_name = os.path.join(log_dir, "app-stable.log")
 log_canary_file_name = os.path.join(log_dir, "app-canary.log")
-
-# first argument is service url
-url = sys.argv[1] if len(sys.argv) > 1 else None
-# if not url:
-#     print("Please provide the url as an argument.")
-#     sys.exit(1)
-
-# initial sleep
-sleep = 0
-print(f"Sleeping for {sleep} seconds")
-time.sleep(sleep)
-
-return_code = 0
 
 # Configure the Kubernetes client
 config.load_kube_config()
@@ -100,30 +87,8 @@ if not namespace:
     sys.exit(1)
 print(f"Current namespace: {namespace}")
 
-if get_logs(namespace, "stable", log_stable_file_name) != 0:
-    sys.exit(1)
-if not get_logs(namespace, "canary", log_canary_file_name):
-    sys.exit(1)
-
-# # Get the logs from stable pods
-# with open(log_file_name_stable, "a") as log_file:
-#     try:
-#         # get pods logs
-
-#         # Write the response text to the log file
-#         print(f"Got stable logs")
-#         log_file.write(f"{response.status_code} {response.text}\n")
-#     except requests.RequestException as e:
-#         return_code = 1
-#         print(f"Error: {e}")
-#         # If an error occurs, write the error to the log file
-#         log_file.write(str(e) + "\n")
-#     # Wait for 1 second before making the next request
-#     time.sleep(1)
-
-# Get the logs from canary pods
-
-# TODO
+get_logs(namespace, "stable", log_stable_file_name)
+get_logs(namespace, "canary", log_canary_file_name)
 
 # create a model
 model = ChatGoogleGenerativeAI(
@@ -168,10 +133,27 @@ with open(log_stable_file_name, "r") as stable_file:
             total_cost += cb.total_cost
             print(f"{result}\n")
 
-# print the cost
+# print the cost calculated by langchain
 print(
     f"Total Cost (USD): ${format(total_cost, '.6f')}"
 )  # without specifying the model version, flat-rate 0.002 USD per 1k input and output tokens is used
 
-print(f"Returning code: {return_code}")
-sys.exit(return_code)
+# get the last line of result
+json_str = result.strip().split('\n')[-1]
+
+promote_decision = True
+try:
+    parsed_json = json.loads(json_str)
+    print("Parsed JSON:")
+    print(f"Text: {parsed_json['text']}")
+    print(f"Promote: {parsed_json['promote']}")
+    promote_decision = parsed_json["promote"].lower() == "true"
+    print(f"Promote Decision: {promote_decision}")
+    print(f"Confidence: {parsed_json['confidence']}")
+except json.JSONDecodeError as e:
+    print(f"Failed to parse JSON: {e}")
+
+if promote_decision:
+    sys.exit(0)
+else:
+    sys.exit(1)
