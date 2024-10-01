@@ -11,6 +11,16 @@ The result is returned from the model as a json file like:
 
 ```json
 {
+    "text": "The canary version initially had issues pulling the required image, leading to Bad Requests. However, the issue seems to have been resolved and the canary started successfully later on.  Further monitoring is recommended to ensure stability.",
+    "promote": true,
+    "confidence": 80
+}
+```
+
+or
+
+```json
+{
     "text": "Canary deployment encountered Bad Request errors (HTTP 400) due to image pulling failures, indicating a problem with the canary version's image or configuration.  The stable version did not exhibit these errors.",
     "promote": false,
     "confidence": 95
@@ -19,7 +29,8 @@ The result is returned from the model as a json file like:
 
 Tested with:
 
-* Google Gemini
+* Google gemini-1.5-pro-latest
+* Google gemini-1.5-flash-latest
 
 # Usage
 
@@ -71,6 +82,12 @@ In your `Rollout` object set the `spec.metrics.provider.job` to something like t
               # - name: code
               #   configMap:
               #     name: canary-demo-6mm6k4ffck
+```
+
+Different models can be passed to the app, ie.
+
+```shell
+python app.py gemini-1.5-flash-latest
 ```
 
 # Development Setup

@@ -26,6 +26,9 @@ config.load_kube_config()
 # Create an API client
 v1 = client.CoreV1Api()
 
+# what model to use
+model_name = sys.argv[1] if len(sys.argv) > 1 else "gemini-1.5-pro-latest"
+
 
 # Get the current namespace from the kubeconfig file or from inside the pod
 def get_current_namespace(context: str = None) -> str | None:
@@ -92,7 +95,7 @@ get_logs(namespace, "canary", log_canary_file_name)
 
 # create a model
 model = ChatGoogleGenerativeAI(
-    model="gemini-1.5-pro-latest",
+    model=model_name,
     apy_key=os.getenv("GOOGLE_API_KEY"),
     temperature=0,
     max_tokens=None,
@@ -139,8 +142,9 @@ print(
 )  # without specifying the model version, flat-rate 0.002 USD per 1k input and output tokens is used
 
 # get the last line of result
-json_str = result.strip().split('\n')[-1]
+json_str = result.strip().split("\n")[-1]
 
+# TODO better parsing of AI output
 promote_decision = True
 try:
     parsed_json = json.loads(json_str)
