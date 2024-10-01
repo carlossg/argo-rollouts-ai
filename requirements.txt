@@ -6,6 +6,7 @@ cachetools==5.4.0
 certifi==2024.7.4
 charset-normalizer==3.3.2
 dataclasses-json==0.6.7
+durationpy==0.8
 frozenlist==1.4.1
 google-ai-generativelanguage==0.6.6
 google-api-core==2.19.1
@@ -18,8 +19,10 @@ grpcio==1.65.1
 grpcio-status==1.62.2
 httplib2==0.22.0
 idna==3.7
+iniconfig==2.0.0
 jsonpatch==1.33
 jsonpointer==3.0.0
+kubernetes==31.0.0
 langchain==0.2.9
 langchain-community==0.2.7
 langchain-core==0.2.21
@@ -30,8 +33,10 @@ marshmallow==3.21.3
 multidict==6.0.5
 mypy-extensions==1.0.0
 numpy==1.26.4
+oauthlib==3.2.2
 orjson==3.10.6
 packaging==24.1
+pluggy==1.5.0
 proto-plus==1.24.0
 protobuf==4.25.3
 pyasn1==0.6.0
@@ -39,10 +44,14 @@ pyasn1_modules==0.4.0
 pydantic==2.8.2
 pydantic_core==2.20.1
 pyparsing==3.1.2
+pytest==8.3.2
+python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 PyYAML==6.0.1
 requests==2.32.3
+requests-oauthlib==2.0.0
 rsa==4.9
+six==1.16.0
 SQLAlchemy==2.0.31
 tenacity==8.5.0
 tqdm==4.66.4
@@ -50,4 +59,5 @@ typing-inspect==0.9.0
 typing_extensions==4.12.2
 uritemplate==4.1.1
 urllib3==2.2.2
+websocket-client==1.8.0
 yarl==1.9.4
