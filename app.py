@@ -106,12 +106,13 @@ model = ChatGoogleGenerativeAI(
 
 system_template = (
     "Analyze what was this canary behavior based on these logs, compare the stable version vs the canary version."
-    + "After your analysis, in the last line write a json formatted line with these entries: "
+    + "Write only a json text with these entries and nothing else: "
     + "one named 'text' with your analysis text; "
-    + "one named 'promote' with 'true' or 'false' depending on whether canary promotion should continue; "
+    + "one named 'promote' with 'true' or 'false' as json booleans depending on whether canary promotion should continue; "
     + "one named 'confidence' with a number from 0 to 100 representing your confidence in the decision. "
     + "The stable version logs start with '--- STABLE LOGS ---' "
-    + "and the canary version logs start with '--- CANARY LOGS ---' "
+    + "and the canary version logs start with '--- CANARY LOGS ---'. "
+    + "Do not print any ```json"
 )
 
 prompt_template = ChatPromptTemplate.from_messages(
@@ -141,8 +142,8 @@ print(
     f"Total Cost (USD): ${format(total_cost, '.6f')}"
 )  # without specifying the model version, flat-rate 0.002 USD per 1k input and output tokens is used
 
-# get the last line of result
-json_str = result.strip().split("\n")[-1]
+# result should be only json
+json_str = result
 
 # TODO better parsing of AI output
 promote_decision = True
@@ -151,7 +152,7 @@ try:
     print("Parsed JSON:")
     print(f"Text: {parsed_json['text']}")
     print(f"Promote: {parsed_json['promote']}")
-    promote_decision = parsed_json["promote"].lower() == "true"
+    promote_decision = parsed_json["promote"]
     print(f"Promote Decision: {promote_decision}")
     print(f"Confidence: {parsed_json['confidence']}")
 except json.JSONDecodeError as e:
