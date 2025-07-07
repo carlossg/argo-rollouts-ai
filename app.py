@@ -20,16 +20,6 @@ log_dir = "/logs" if os.path.exists("/logs") else "./logs"
 log_stable_file_name = os.path.join(log_dir, "app-stable.log")
 log_canary_file_name = os.path.join(log_dir, "app-canary.log")
 
-# Configure the Kubernetes client
-config.load_kube_config()
-
-# Create an API client
-v1 = client.CoreV1Api()
-
-# what model to use
-model_name = sys.argv[1] if len(sys.argv) > 1 else "gemini-1.5-pro-latest"
-
-
 # Get the current namespace from the kubeconfig file or from inside the pod
 def get_current_namespace(context: str = None) -> str | None:
     ns_path = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
@@ -47,7 +37,9 @@ def get_current_namespace(context: str = None) -> str | None:
 
 
 # Get the logs from pods with the label 'role'
-def get_logs(namespace: str, role: str, log_file_name: str) -> bool:
+def get_logs(namespace: str, role: str, log_file_name: str, v1=None) -> bool:
+    if v1 is None:
+        v1 = client.CoreV1Api()
     with open(log_file_name, "a") as log_file:
         try:
             # List all pods in this namespace with the label 'stable'
@@ -83,82 +75,93 @@ def get_logs(namespace: str, role: str, log_file_name: str) -> bool:
             return 1
 
 
-# get current namespace from kubeconfig
-namespace = get_current_namespace(context="default")  # TODO
-if not namespace:
-    print("Namespace not found")
-    sys.exit(1)
-print(f"Current namespace: {namespace}")
+def main():
+    # Configure the Kubernetes client
+    config.load_kube_config()
+    v1 = client.CoreV1Api()
+    # get current namespace from kubeconfig
+    namespace = get_current_namespace(context="default")  # TODO
+    if not namespace:
+        print("Namespace not found")
+        sys.exit(1)
+    print(f"Current namespace: {namespace}")
 
-get_logs(namespace, "stable", log_stable_file_name)
-get_logs(namespace, "canary", log_canary_file_name)
+    get_logs(namespace, "stable", log_stable_file_name, v1)
+    get_logs(namespace, "canary", log_canary_file_name, v1)
 
-# create a model
-model = ChatGoogleGenerativeAI(
-    model=model_name,
-    apy_key=os.getenv("GOOGLE_API_KEY"),
-    temperature=0,
-    max_tokens=None,
-    timeout=None,
-    max_retries=2,
-    # other params...
-)
+    # what model to use
+    model_name = sys.argv[1] if len(sys.argv) > 1 else "gemini-1.5-pro-latest"
 
-system_template = (
-    "Analyze what was this canary behavior based on these logs, compare the stable version vs the canary version."
-    + "Write only a json text with these entries and nothing else: "
-    + "one named 'text' with your analysis text; "
-    + "one named 'promote' with 'true' or 'false' as json booleans depending on whether canary promotion should continue; "
-    + "one named 'confidence' with a number from 0 to 100 representing your confidence in the decision. "
-    + "The stable version logs start with '--- STABLE LOGS ---' "
-    + "and the canary version logs start with '--- CANARY LOGS ---'. "
-    + "Do not print any ```json"
-)
+    # create a model
+    model = ChatGoogleGenerativeAI(
+        model=model_name,
+        apy_key=os.getenv("GOOGLE_API_KEY"),
+        temperature=0,
+        max_tokens=None,
+        timeout=None,
+        max_retries=2,
+        # other params...
+    )
 
-prompt_template = ChatPromptTemplate.from_messages(
-    [("system", system_template), ("user", "{text}")]
-)
-parser = StrOutputParser()
+    system_template = (
+        "Analyze what was this canary behavior based on these logs, compare the stable version vs the canary version."
+        + "Write only a json text with these entries and nothing else: "
+        + "one named 'text' with your analysis text; "
+        + "one named 'promote' with 'true' or 'false' as json booleans depending on whether canary promotion should continue; "
+        + "one named 'confidence' with a number from 0 to 100 representing your confidence in the decision. "
+        + "The stable version logs start with '--- STABLE LOGS ---' "
+        + "and the canary version logs start with '--- CANARY LOGS ---'. "
+        + "Do not print any ```json"
+    )
 
-# analyze logs using the model
-total_cost = 0
-print(f"\n\nAnalyzing log files: {log_stable_file_name} and {log_canary_file_name}\n")
-with open(log_stable_file_name, "r") as stable_file:
-    with open(log_canary_file_name, "r") as canary_file:
-        lines_stable = stable_file.readlines()
-        lines_canary = canary_file.readlines()
-        with get_openai_callback() as cb:
-            chain = prompt_template | model | parser
-            result = chain.invoke(
-                {
-                    "text": f"--- STABLE LOGS ---\n{lines_stable}\n\n--- CANARY LOGS ---\n{lines_canary}"
-                }
-            )
-            total_cost += cb.total_cost
-            print(f"{result}\n")
+    prompt_template = ChatPromptTemplate.from_messages(
+        [("system", system_template), ("user", "{text}")]
+    )
+    parser = StrOutputParser()
 
-# print the cost calculated by langchain
-print(
-    f"Total Cost (USD): ${format(total_cost, '.6f')}"
-)  # without specifying the model version, flat-rate 0.002 USD per 1k input and output tokens is used
+    # analyze logs using the model
+    total_cost = 0
+    print(f"\n\nAnalyzing log files: {log_stable_file_name} and {log_canary_file_name}\n")
+    with open(log_stable_file_name, "r") as stable_file:
+        with open(log_canary_file_name, "r") as canary_file:
+            lines_stable = stable_file.readlines()
+            lines_canary = canary_file.readlines()
+            with get_openai_callback() as cb:
+                chain = prompt_template | model | parser
+                result = chain.invoke(
+                    {
+                        "text": f"--- STABLE LOGS ---\n{lines_stable}\n\n--- CANARY LOGS ---\n{lines_canary}"
+                    }
+                )
+                total_cost += cb.total_cost
+                print(f"{result}\n")
 
-# result should be only json
-json_str = result
+    # print the cost calculated by langchain
+    print(
+        f"Total Cost (USD): ${format(total_cost, '.6f')}"
+    )  # without specifying the model version, flat-rate 0.002 USD per 1k input and output tokens is used
 
-# TODO better parsing of AI output
-promote_decision = True
-try:
-    parsed_json = json.loads(json_str)
-    print("Parsed JSON:")
-    print(f"Text: {parsed_json['text']}")
-    print(f"Promote: {parsed_json['promote']}")
-    promote_decision = parsed_json["promote"]
-    print(f"Promote Decision: {promote_decision}")
-    print(f"Confidence: {parsed_json['confidence']}")
-except json.JSONDecodeError as e:
-    print(f"Failed to parse JSON: {e}")
+    # result should be only json
+    json_str = result
 
-if promote_decision:
-    sys.exit(0)
-else:
-    sys.exit(1)
+    # TODO better parsing of AI output
+    promote_decision = True
+    try:
+        parsed_json = json.loads(json_str)
+        print("Parsed JSON:")
+        print(f"Text: {parsed_json['text']}")
+        print(f"Promote: {parsed_json['promote']}")
+        promote_decision = parsed_json["promote"]
+        print(f"Promote Decision: {promote_decision}")
+        print(f"Confidence: {parsed_json['confidence']}")
+    except json.JSONDecodeError as e:
+        print(f"Failed to parse JSON: {e}")
+
+    if promote_decision:
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,1 +1,47 @@
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Logs and local data
+*.log
+logs/
+app.log
+curl.log
+curl.log.bak
+
+# Test and coverage outputs
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+*.py,cover
+
+# Environment files
+.env
+.env.*
+
+# VSCode settings
+.vscode/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# MacOS system files
+.DS_Store
+
+# Ignore AI/ML model files or embeddings if generated
+*.embeddings
+*.model
+
+# Ignore backup files
+*~
+*.bak
+
 /venv/
