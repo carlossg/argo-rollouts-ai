@@ -8,7 +8,7 @@ cachetools==5.5.2
 certifi==2024.7.4
 charset-normalizer==3.3.2
 dataclasses-json==0.6.7
-durationpy==0.8
+durationpy==0.10
 frozenlist==1.4.1
 google-ai-generativelanguage==0.6.6
 google-api-core==2.19.1
