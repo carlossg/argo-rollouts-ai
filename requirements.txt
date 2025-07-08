@@ -12,7 +12,7 @@ durationpy==0.10
 frozenlist==1.7.0
 google-ai-generativelanguage==0.6.6
 google-api-core==2.25.1
-google-api-python-client==2.175.0
+google-api-python-client==2.176.0
 google-auth==2.40.3
 google-auth-httplib2==0.2.0
 google-generativeai==0.7.2
