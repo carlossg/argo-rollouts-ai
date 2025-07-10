@@ -36,7 +36,7 @@ langchain-text-splitters==0.3.8
 langsmith==0.1.147
 marshmallow==3.26.1
 multidict==6.6.3
-mypy-extensions==1.0.0
+mypy-extensions==1.1.0
 numpy==1.26.4
 oauthlib==3.2.2
 orjson==3.10.18
