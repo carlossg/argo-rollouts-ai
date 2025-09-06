@@ -32,7 +32,7 @@ langchain==0.3.25
 langchain-community==0.3.1
 langchain-core==0.3.63
 langchain-google-genai==2.0.0
-langchain-text-splitters==0.3.8
+langchain-text-splitters==0.3.11
 langsmith==0.1.147
 marshmallow==3.26.1
 multidict==6.6.3
